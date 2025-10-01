@@ -22,7 +22,7 @@ function writeData(obj) {
 
 export default function handler(req, res) {
   // 🔑 Ambil apikey dari query param
-  const apikey = "tes";
+  const apikey = req.query.apikey || "";
 
   if (!process.env.COC_API_KEY) {
     return res.status(500).json({ error: "COC_API_KEY not configured" });
