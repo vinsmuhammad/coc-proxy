@@ -1,7 +1,4 @@
 // pages/api/coc/generate.js
-// Protected generator: butuh header x-secret = process.env.GEN_SECRET
-// Body (JSON) optional: { "expiresInSec": 3600, "note": "for-whatever" }
-
 import { randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
@@ -24,21 +21,23 @@ function writeData(obj) {
 }
 
 export default function handler(req, res) {
-  const secret = req.headers["x-secret"] || req.query.s || "";
-  if (!process.env.GEN_SECRET) {
-    return res.status(500).json({ error: "GEN_SECRET not configured" });
+  // 🔑 Ambil apikey dari query param
+  const apikey = "tes";
+
+  if (!process.env.COC_API_KEY) {
+    return res.status(500).json({ error: "COC_API_KEY not configured" });
   }
-  if (secret !== process.env.GEN_SECRET) {
-    return res.status(403).json({ error: "Forbidden: missing/invalid secret" });
+  if (apikey !== process.env.COC_API_KEY) {
+    return res.status(403).json({ error: "Forbidden: missing/invalid apikey" });
   }
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed, use POST" });
+  if (req.method !== "GET" && req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed, use GET/POST" });
   }
 
   const body = req.body || {};
   const expiresIn = parseInt(body.expiresInSec || 0, 10); // 0 = never
-  const note = body.note || "";
+  const note = body.note || req.query.note || "";
 
   const token = randomBytes(16).toString("hex"); // 32-char token
   const createdAt = Date.now();
@@ -51,7 +50,6 @@ export default function handler(req, res) {
     createdAt,
     expiresAt,
     revoked: false
-    // you can add allowedIPs: [], allowedOrigins: [], scope: [] if needed
   });
   writeData(data);
 
